@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Параллел зөөлт ба эргүүлэлт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&family=Russo+One&display=swap">
+<style>
+:root{
+  --bg:#06101f; --bg2:#0a1a33; --pan:#0d2142; --pan2:#12294f; --line:#1f4378;
+  --cy:#22e5ff; --cy2:#0bb8d4; --cy-soft:rgba(34,229,255,.12);
+  --or:#ff9a2e; --or2:#d9700f; --or-soft:rgba(255,154,46,.14);
+  --gr:#3dff8a; --rd:#ff6b7f; --tx:#eaf6ff; --mu:#a9c1df;
+  --hf:"Russo One","Exo 2",system-ui,sans-serif;
+  --glow:0 0 0 1px rgba(34,229,255,.25),0 10px 30px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{color:var(--tx);font-family:"Exo 2","Segoe UI",system-ui,sans-serif;font-size:20px;line-height:1.4;overflow:hidden;background-color:var(--bg);
+  background-image:radial-gradient(circle,rgba(34,229,255,.16) 1.4px,transparent 2px),radial-gradient(ellipse at 20% 0%,#0f2a55 0%,transparent 60%),radial-gradient(ellipse at 100% 100%,#2a1a08 0%,transparent 50%);
+  background-size:32px 32px,100% 100%,100% 100%}
+button{font:inherit;cursor:pointer;color:inherit}
+#circ{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.5}
+
+/* ===== Header ===== */
+.top{position:fixed;inset:0 0 auto 0;height:64px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;z-index:20;background:linear-gradient(#0b1d3a,#081631);border-bottom:2px solid var(--cy);box-shadow:0 0 18px rgba(34,229,255,.35)}
+.hb{display:flex;align-items:center;gap:10px;padding:0 16px;height:100%}
+.hb .lbl{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--or);display:block;font-weight:700}
+.hb .val{font-family:var(--hf);font-size:19px;white-space:nowrap;color:var(--tx)}
+.hb.mid{min-width:0;overflow:hidden;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.hb.mid .val{overflow:hidden;text-overflow:ellipsis;color:var(--cy)}
+.leds{display:flex;gap:5px;align-items:center}
+.leds i{font-style:normal;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:#0a1a33;border:2px solid #24477a;color:#5d7aa3;transition:.3s}
+.leds i.on{background:var(--cy);border-color:#bff8ff;color:#04223a;box-shadow:0 0 10px var(--cy),0 0 20px rgba(34,229,255,.6)}
+.leds i.d.on{background:var(--or);border-color:#ffd9ad;box-shadow:0 0 10px var(--or)}
+.timer{font-family:var(--hf);font-size:24px;font-variant-numeric:tabular-nums;color:var(--gr);text-shadow:0 0 8px rgba(61,255,138,.6);cursor:default;padding:0 4px}
+.timer.warn{color:var(--or);text-shadow:0 0 8px var(--or)}.timer.over{color:var(--rd);text-shadow:0 0 8px var(--rd)}
+.tbtn{border:1.5px solid var(--line);background:#0a1a33;border-radius:6px;padding:4px 10px;font-weight:700;font-size:15px;color:var(--tx)}
+.tbtn:hover{border-color:var(--cy);color:var(--cy)}
+
+/* ===== Slides ===== */
+.deck{position:absolute;inset:72px 0 70px 0;z-index:1}
+.slide{position:absolute;inset:0;overflow:hidden;padding:8px clamp(14px,3vw,44px) 10px;opacity:0;visibility:hidden;transform:translateX(30px);transition:opacity .35s,transform .35s,visibility .35s}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.inner{max-width:1300px;margin:0 auto;height:100%;display:flex;flex-direction:column}
+h2{font-family:var(--hf);font-weight:400;font-size:clamp(24px,2.6vw,36px);margin:0 0 6px;display:flex;align-items:center;gap:12px;color:var(--tx);flex-wrap:wrap}
+h2 .lv{font-size:15px;padding:3px 10px;border-radius:4px;background:var(--or);color:#1b0e00;letter-spacing:1px}
+h3{font-family:var(--hf);font-weight:400;font-size:21px;margin:0 0 6px;color:var(--cy)}
+.sub{color:var(--mu);margin:0 0 8px;font-size:18px}
+.card{background:linear-gradient(160deg,var(--pan2),var(--pan));border:1px solid var(--line);box-shadow:var(--glow);padding:12px 16px;border-radius:10px;position:relative}
+.card::before{content:"";position:absolute;top:8px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--gr);box-shadow:0 0 8px var(--gr)}
+.lab{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(330px,1fr);gap:16px;flex:1;min-height:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stage{width:100%;height:auto;max-height:calc(100vh - 250px);display:block;margin:0 auto;border-radius:10px;box-shadow:0 0 0 1px rgba(34,229,255,.3),0 0 24px rgba(34,229,255,.12)}
+.btn{border:2px solid var(--cy);border-radius:8px;padding:8px 16px;font-weight:800;background:rgba(34,229,255,.08);color:var(--cy);transition:transform .1s,background .15s,box-shadow .15s}
+.btn:hover{background:rgba(34,229,255,.2);box-shadow:0 0 12px rgba(34,229,255,.45)}
+.btn:active{transform:translateY(2px)}
+.btn.on{background:var(--cy);color:#04223a}
+.btn.or{border-color:var(--or);color:#1b0e00;background:var(--or)}
+.btn.or:hover{box-shadow:0 0 14px var(--or)}
+.btn.go{border-color:var(--gr);background:var(--gr);color:#032313;font-family:var(--hf);font-weight:400;font-size:22px;padding:6px 20px}
+.btn.sm{padding:5px 11px;font-size:16px}
+.btn[disabled]{opacity:.4;cursor:default}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tabs .btn{font-size:16px;padding:5px 12px}
+.muted{color:var(--mu)}
+.def{padding:7px 12px;margin:6px 0;background:var(--cy-soft);border-left:4px solid var(--cy);border-radius:0 8px 8px 0;font-size:18px}
+.def.o{background:var(--or-soft);border-color:var(--or)}
+.def.g{background:rgba(61,255,138,.1);border-color:var(--gr)}
+.fb{font-size:19px;font-weight:700;min-height:28px;margin-top:6px}
+.fb.ok{color:var(--gr)}.fb.no{color:var(--rd)}
+.pal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0}
+.pal .btn{font-size:28px;padding:4px 0;font-family:var(--hf);font-weight:400}
+.prog{min-height:56px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px;border:2px dashed #2b5591;border-radius:10px;background:rgba(0,0,0,.25);margin:6px 0}
+.prog .ph{color:#6d8bb3;font-size:17px}
+.blk{position:relative;border:none;display:inline-flex;align-items:center;gap:4px;padding:6px 14px 6px 18px;border-radius:6px;background:var(--or);color:#1b0e00;font-family:var(--hf);font-size:22px;box-shadow:inset 0 -4px rgba(0,0,0,.25)}
+.blk::before{content:"";position:absolute;left:-1px;top:50%;width:9px;height:14px;margin-top:-7px;border-radius:0 7px 7px 0;background:#0a1a33}
+.blk.c{background:var(--cy);color:#04223a}
+.blk.run{outline:3px solid #fff;box-shadow:0 0 16px #fff}
+.blk.sel{outline:3px dashed #fff;outline-offset:3px}
+.blk.bad{background:var(--rd)}
+.big{font-family:var(--hf);font-size:clamp(40px,5vw,64px);text-align:center;color:var(--or);text-shadow:0 0 18px rgba(255,154,46,.6);letter-spacing:2px;padding:6px 0;min-height:80px}
+.say{font-size:20px;text-align:center;color:var(--tx);min-height:30px}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:#0a1a33;font-size:16px;color:var(--mu)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:18px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+/* intro */
+.intro{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,4vw,60px);align-items:center;height:100%}
+.intro .bot{width:clamp(200px,24vw,330px);filter:drop-shadow(0 0 22px rgba(34,229,255,.55))}
+.intro .school{font-size:22px;color:var(--mu);font-weight:700}
+.intro .subject{display:inline-block;font-family:var(--hf);font-size:24px;color:#1b0e00;background:var(--or);padding:2px 16px;border-radius:6px;margin:10px 0;box-shadow:0 0 18px rgba(255,154,46,.5)}
+.intro h1{font-family:var(--hf);font-weight:400;font-size:clamp(40px,5.2vw,74px);line-height:1.08;margin:6px 0 10px;color:var(--cy);text-shadow:0 0 16px rgba(34,229,255,.55)}
+.intro .teacher{font-size:24px;font-weight:700;margin-top:6px}
+.lvmap{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.lvmap span{font-size:16px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:rgba(10,26,51,.8)}
+.lvmap span b{color:var(--or)}
+
+/* tiles */
+.mot{width:100%;max-width:200px;display:block;margin:4px auto;cursor:pointer;border-radius:8px;box-shadow:0 0 0 1px rgba(255,154,46,.5)}
+.log{font-size:17px;max-height:92px;overflow:auto;color:var(--mu);font-family:"Exo 2",monospace}
+.qcard{padding:9px 14px;margin-bottom:8px}
+.qcard .q{font-weight:700;font-size:19px;margin-bottom:6px}
+.qcard .row .btn{font-size:17px;padding:5px 12px}
+.qcard .btn.right{background:var(--gr);border-color:var(--gr);color:#032313}
+.qcard .btn.wrong{background:var(--rd);border-color:var(--rd);color:#2a0008}
+.hw li{margin:5px 0}
+.stars3{display:flex;gap:12px;justify-content:center}
+.stars3 button{font-size:40px;border:none;background:none;filter:grayscale(1);opacity:.35;transition:.2s}
+.stars3 button.on{filter:none;opacity:1;transform:scale(1.12)}
+
+/* ===== Nav ===== */
+.nav{position:fixed;inset:auto 0 0 0;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:20;gap:10px;background:linear-gradient(#081631,#0b1d3a);border-top:2px solid var(--or);box-shadow:0 0 18px rgba(255,154,46,.3)}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dot{width:38px;height:30px;border:1.5px solid var(--line);border-radius:5px;background:#0a1a33;color:var(--mu);font-family:var(--hf);font-size:14px;transition:.2s}
+.dot.on{background:var(--or);color:#1b0e00;border-color:var(--or);box-shadow:0 0 10px var(--or)}
+.dot.done{border-color:var(--cy);color:var(--cy)}
+.tnotes{position:fixed;right:18px;bottom:74px;width:min(440px,calc(100vw - 36px));max-height:calc(100vh - 160px);overflow:auto;background:#fff8e8;color:#2a1a05;border:2px solid var(--or);border-radius:10px;padding:12px 16px;font-size:16px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:25;display:none}
+.tnotes.show{display:block}
+.tnotes h4{margin:0 0 6px;font-size:17px}
+.tnotes ul{margin:0;padding-left:20px}
+.tnotes li{margin:3px 0}
+
+@media (max-height:900px){
+  body{font-size:18px}
+  h2{font-size:28px;margin-bottom:4px}
+  .sub{font-size:17px;margin-bottom:6px}
+  .card{padding:9px 13px}
+  .def{padding:5px 10px;margin:4px 0;font-size:17px}
+  .pal .btn{font-size:24px}
+  .prog{min-height:50px;padding:6px;margin:4px 0}
+  .blk{font-size:19px;padding:4px 12px 4px 16px}
+  .big{font-size:44px;min-height:64px;padding:0}
+  .stage{max-height:calc(100vh - 235px)}
+  .tabs{margin-bottom:5px}
+  .fb{font-size:18px;margin-top:4px}
+  .qcard{padding:6px 12px;margin-bottom:6px}
+  .qcard .q{font-size:18px;margin-bottom:4px}
+  .mot{max-width:160px}
+  .lvmap span{font-size:15px}
+}
+@media (max-width:1000px){
+  .leds{display:none}
+  .lab,.grid2,.intro{grid-template-columns:1fr !important}
+  .dots{display:none}
+  .slide{overflow:auto}
+}
+</style>
+</head>
+<body>
+<svg id="circ" aria-hidden="true"></svg>
+
+<header class="top">
+  <div class="hb"><span><span class="lbl">Робот лаборатори</span><span class="val">🤖 Математик · 5-р анги</span></span></div>
+  <div class="hb mid"><span style="min-width:0"><span class="lbl" id="sheetNo">Түвшин</span><span class="val" id="stageName"></span></span></div>
+  <div class="hb">
+    <div class="leds" title="Давсан түвшнүүд">
+      <i id="led0">0</i><i id="led1">1</i><i id="led2">2</i><i id="led3">3</i><i id="led4">4</i><i id="led5">5</i><i id="led6">6</i><i id="led7">7</i><i id="led8">8</i><i id="ledD" class="d" title="Алдаа засах">🐞</i>
+    </div>
+    <div class="timer" id="timer" title="Хичээлийн үлдсэн хугацаа (2 удаа дарвал 40:00 болно)">⏱ <span id="tval">40:00</span></div>
+    <button class="tbtn" id="tPlay" title="Цаг эхлүүлэх / зогсоох">▶</button>
+    <button class="tbtn" id="notesBtn" title="Багшийн тэмдэглэл (N)">📝</button>
+    <button class="tbtn" id="fsBtn" title="Бүтэн дэлгэц (F)">⛶</button>
+  </div>
+</header>
+
+<main class="deck">
+
+<!-- 1. Intro -->
+<section class="slide" data-name="Танилцуулга · Робот лаборатори" data-min="1"
+  data-notes="Мэндчилээд: Өнөөдөр бид бүгд РОБОТ ПРОГРАММИСТ болно! Робот дүрсийг командаар зөөж, эргүүлнэ.|Сэдэв: Параллел зөөлт ба эргүүлэлт — сурах бичгийн 107–109-р тал.|Дээд талын LED гэрлүүд = түвшнүүд. Түвшин давах бүрт гэрэл асна (0–8, 🐞 = алдаа засах булан).|Дээд талын ▶ товчоор 40:00 цагийг эхлүүлнэ. Цаг дээр 2 дарвал 40:00 болно.">
+  <div class="inner">
+    <div class="intro">
+      <svg class="bot" id="introBot" viewBox="0 0 160 190"></svg>
+      <div>
+        <div class="school">🏫 1-р сургууль</div>
+        <div class="subject">Математик</div>
+        <h1>Параллел зөөлт<br>ба эргүүлэлт</h1>
+        <div class="muted" style="font-size:22px">🤖 Робот программист · 5-р анги</div>
+        <div class="teacher">👩‍🏫 Багш: В. Гэрэлтуяа</div>
+        <div class="lvmap">
+          <span><b>0</b> Робот бүжиг</span><span><b>1–3</b> Зөөлт</span><span><b>4–6</b> Эргүүлэлт</span><span><b>7</b> Таних</span><span><b>🐞</b> Алдаа засах</span><span><b>8</b> Хээ бүтээх</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Level 0 unplugged -->
+<section class="slide" data-name="0-р түвшин · Робот бүжиг (компьютергүй)" data-min="3"
+  data-notes="Бүх хүүхдийг босгоно. Хүүхэд бүр = робот. Нүүрээ самбар руу харуулж зогсоно.|ЗӨӨЛТ (→ ← ↑ ↓): биеэ ЭРГҮҮЛЭХГҮЙ, самбар руу харсаар хажуу тийш, урагш, хойш алхана. ЭРГҮҮЛЭЛТ (↻ ↺): байрандаа эргэнэ — эргэлтийн төв нь өөрөө.|🎲 дарж команд гаргаад чангаар уншина → хүүхдүүд хийнэ → ▶ дарж дэлгэц дээрх роботтой тулгана. ⭐ = 1 команд, ⭐⭐ = 2, ⭐⭐⭐ = 3 команд.|Сэнс тоглоом (х.108, салхин тээрэм): 3–4 хүүхэд гар барилцан эгнэнэ, захын хүүхэд = төв, байрандаа эргэнэ; бусад нь тойрон алхана. Багш: 90°… 180°… 360°!|Асуулт: Зөөлт хийхэд нүүр чинь аль зүг рүү харсан бэ? (Өөрчлөгдөөгүй.) Эргэхэд байрлал чинь өөрчлөгдсөн үү? (Үгүй, зөвхөн чиглэл.)|3 команд ажиллуулбал 0-р LED асна.">
+  <div class="inner">
+    <h2>🕺 Робот бүжиг <span class="lv">0-р түвшин</span></h2>
+    <div class="lab">
+      <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+        <svg class="stage" id="floor" style="max-height:calc(100vh - 300px)"></svg>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-height:0">
+        <div class="card">
+          <h3>Та бол робот!</h3>
+          <div class="def"><b>→ ← ↑ ↓ Зөөлт:</b> биеэ эргүүлэхгүй алхана. Нүүр самбар руу харсаар!</div>
+          <div class="def o"><b>↻ ↺ Эргүүлэлт:</b> байрандаа эргэнэ. Төв нь — чи өөрөө.</div>
+        </div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <div class="row"><button class="btn sm" data-l0="1">⭐</button><button class="btn sm on" data-l0="2">⭐⭐</button><button class="btn sm" data-l0="3">⭐⭐⭐</button></div>
+            <span class="chip">Ажилласан: <b id="l0Cnt">0</b></span>
+          </div>
+          <div class="big" id="l0Card">🎲</div>
+          <div class="say" id="l0Say">Команд гаргахын тулд 🎲 дар</div>
+          <div class="row" style="justify-content:center;margin-top:8px">
+            <button class="btn or" id="l0New">🎲 Шинэ команд</button>
+            <button class="btn go" id="l0Run">▶</button>
+            <button class="btn sm" id="l0Reset">⟲ Төв рүү</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Levels 1-3 translation -->
+<section class="slide" data-name="1–3-р түвшин · Параллел зөөлт" data-min="8"
+  data-notes="х.107 дүрэм: Дүрс параллел зөөлтөөр тодорхой ЧИГЛЭЛД, тодорхой ЗАЙД шилждэг.|1-р түвшин ⭐: →5. 2-р түвшин (х.107-ийн дасгал): баруун тийш 4, доош 1 → программ →4 ↓1. 3-р түвшин ⭐⭐⭐: ←6 ↑3, зөвхөн 2 блок (батерей бага).|Ижил сумыг дахин дарвал тоо нэмэгдэнэ (→ → → = →3). Блок дээр дарвал устана.|Асуулт: Робот дүрсийг зөөсний дараа хэлбэр, хэмжээ нь өөрчлөгдсөн үү? — Үгүй! Тэнцүү дүрс.|х.107-ийн 1-р бодлого: АВ хэрчмийн 2 үзүүр ижил тооны нэгжээр, ижил чиглэлд шилждэг. 2-р бодлого: машин чигээрээ 9 м явсан — параллел зөөлт.|Ярилцах (х.107): гурвалжныг 2.5 см, 5.3 см зайд зөөх нь мөн адил — бүх цэг ижил зайд шилжинэ.">
+  <div class="inner">
+    <h2>➡️ Робот дүрс зөөнө <span class="lv">1–3-р түвшин</span></h2>
+    <div class="tabs" id="tTabs"></div>
+    <div class="lab">
+      <div class="card"><svg class="stage" id="tSvg"></svg></div>
+      <div class="card" style="display:flex;flex-direction:column">
+        <h3>🎯 Даалгавар</h3>
+        <div id="tMis" style="font-size:18px;min-height:52px"></div>
+        <div class="pal"><button class="btn" data-td="L">←</button><button class="btn" data-td="U">↑</button><button class="btn" data-td="D">↓</button><button class="btn" data-td="R">→</button></div>
+        <div class="row" style="justify-content:space-between"><b>Программ:</b><span class="chip" id="tBat"></span></div>
+        <div class="prog" id="tProg"></div>
+        <div class="row"><button class="btn go" id="tRun">▶ Ажиллуул</button><button class="btn sm" id="tClr">⟲ Арилгах</button></div>
+        <div class="fb" id="tFb"></div>
+        <div class="def g" style="margin-top:auto">📏 Параллел зөөлт = <b>чиглэл</b> + <b>зай</b> (нэгж)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Rotation explore -->
+<section class="slide" data-name="Эргүүлэлтийн лаборатори · Сэнс ба хэрчим" data-min="4"
+  data-notes="х.108-ын 3-р бодлого: сэнсийг 90° (1 тэгш өнцөг), 180° (2), 270° (3), 360° (4 тэгш өнцөг) эргүүлэхэд анхны байрлалдаа ирнэ. ↻ товчийг 4 удаа дарж шалгана.|х.108-ын 1-р бодлого: АВ хэрчмийг А цэгийг тойруулан цагийн зүүний дагуу 90° → AD хэрчим; В цэгийг тойруулан → CВ хэрчим.|Эргүүлэлтэд 3 зүйл заавал хэрэгтэй: ТӨВ, ӨНЦӨГ, ЧИГЛЭЛ (цагийн зүүний дагуу ↻ / эсрэг ↺).|х.108-ын 2а: квадратыг 4 дэх удаагаа 90° эргүүлбэл анхны байрлалдаа ирнэ. 2б: Цагийн зүүний эсрэг 3 удаа 90° = цагийн зүүний дагуу 1 удаа 90° (сэнс дээр ↺ 3 удаа дарж үзүүлнэ).">
+  <div class="inner">
+    <h2>🔄 Эргүүлэлтийн лаборатори</h2>
+    <div class="grid2" style="flex:1;min-height:0">
+      <div class="card" style="display:flex;flex-direction:column">
+        <h3>🌬️ Салхин тээрмийн сэнс (х.108)</h3>
+        <svg class="stage" id="fan" viewBox="0 0 300 300" style="max-height:calc(100vh - 420px)"></svg>
+        <div class="row" style="justify-content:center;margin-top:8px"><button class="btn or" id="fanCW">↻ 90°</button><button class="btn" id="fanCCW">↺ 90°</button><span class="chip" style="font-size:20px">Нийт: <b id="fanDeg">0°</b></span></div>
+        <div class="fb" id="fanFb" style="text-align:center"></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column">
+        <h3>📍 АВ хэрчмийг эргүүлье (х.108)</h3>
+        <svg class="stage" id="abSvg" style="max-height:calc(100vh - 420px)"></svg>
+        <div class="row" style="justify-content:center;margin-top:8px"><button class="btn or" id="abA">А-г тойруулан ↻ 90°</button><button class="btn or" id="abB">В-г тойруулан ↻ 90°</button><button class="btn sm" id="abR">⟲</button></div>
+        <div class="fb" id="abFb" style="text-align:center"></div>
+      </div>
+    </div>
+    <div class="def o" style="text-align:center;font-size:20px">Эргүүлэлтэд хэрэгтэй 3 зүйл: 📍 <b>ТӨВ</b> · 📐 <b>ӨНЦӨГ</b> (90°, 180°…) · 🔁 <b>ЧИГЛЭЛ</b> (цагийн зүүний дагуу ↻ / эсрэг ↺)</div>
+  </div>
+</section>
+
+<!-- 5. Levels 4-6 rotation -->
+<section class="slide" data-name="4–6-р түвшин · Эргүүлэлт" data-min="8"
+  data-notes="4-р түвшин ⭐ (х.109): M цэгийг тойруулан цагийн зүүний ЭСРЭГ 90° → дарцаг зүүн тийш хэвтэнэ. Зөв: ↺ 90°.|5-р түвшин (х.109, а): тэгш өнцгийн орой нь A. A-г тойруулан цагийн зүүний ДАГУУ 90° (↻). б асуулт: Хэлбэр, хэмжээ ижил үү? — Тийм, тэнцүү дүрс.|6-р түвшин ⭐⭐⭐: P цэгийг тойруулан 180° (↻ ч, ↺ ч зөв!). Асуулт: Яагаад 2 чиглэл хоёулаа зөв вэ? (180° = хагас эргэлт.)|Төвийг SVG дээрх LED цэг дээр эсвэл баруун талын товчоор сонгоно.|Буруу бол программ «төв буруу» эсвэл «өнцөг/чиглэл шалга» гэж сануулна.">
+  <div class="inner">
+    <h2>↻ Робот дүрс эргүүлнэ <span class="lv">4–6-р түвшин</span></h2>
+    <div class="tabs" id="rTabs"></div>
+    <div class="lab">
+      <div class="card"><svg class="stage" id="rSvg"></svg></div>
+      <div class="card" style="display:flex;flex-direction:column">
+        <h3>🎯 Даалгавар</h3>
+        <div id="rMis" style="font-size:18px;min-height:52px"></div>
+        <div style="margin-top:4px"><b>📍 Төв:</b> <span class="row" id="rCands" style="display:inline-flex"></span></div>
+        <div style="margin-top:8px"><b>📐 Өнцөг:</b> <span class="row" style="display:inline-flex"><button class="btn sm" data-ra="90">90°</button><button class="btn sm" data-ra="180">180°</button></span></div>
+        <div style="margin-top:8px"><b>🔁 Чиглэл:</b> <span class="row" style="display:inline-flex"><button class="btn sm" data-rd="1">↻ дагуу</button><button class="btn sm" data-rd="-1">↺ эсрэг</button></span></div>
+        <div class="prog" id="rProg" style="margin-top:8px"></div>
+        <div class="row"><button class="btn go" id="rRun">▶ Ажиллуул</button><span class="chip" id="rAng" style="font-size:20px">0°</span></div>
+        <div class="fb" id="rFb"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Level 7 identify -->
+<section class="slide" data-name="7-р түвшин · Ямар шилжилт вэ?" data-min="4"
+  data-notes="х.109: Тэнхлэгийн тэгш хэм, параллел зөөлт, эргүүлэлтийн аль нь болохыг тодорхойлох дасгал (а, б, в зургууд) — энд санамсаргүй шинэ зураг гарна.|Түлхүүр: дүрс ИЖИЛ тийшээ харж байвал → зөөлт; ЭРГЭСЭН бол → эргүүлэлт; толин тусгал шиг УРВАСАН бол → тэнхлэгийн тэгш хэм.|Хариулсны дараа 👁 дарж хөдөлгөөнийг харуулна. 5 зөв хариулбал 7-р LED асна.|Дүгнэлт (х.109): Параллел зөөлт, эргүүлэлт, тэнхлэгийн тэгш хэмээр дүрс ТЭНЦҮҮ дүрсдээ шилждэг — эдгээрийг дүрсийн шилжилт гэнэ.|х.109: Зураг дээрх дүрсүүд дотор параллел зөөлтөөр шилжсэн дүрс байна уу? гэх асуултыг энд ярилцаж болно.">
+  <div class="inner">
+    <h2>🔍 Робот юу хийсэн бэ? <span class="lv">7-р түвшин</span></h2>
+    <div class="lab">
+      <div class="card"><svg class="stage" id="mSvg"></svg>
+        <div class="row" style="justify-content:center;margin-top:6px"><span class="chip">🟦 Өмнө</span><span class="chip">🟧 Дараа</span></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:6px">
+        <h3>Цэнхэр дүрс улбар шар болсон. Аль шилжилт вэ?</h3>
+        <button class="btn" data-mx="t" style="text-align:left">➡️ Параллел зөөлт</button>
+        <button class="btn" data-mx="r" style="text-align:left">🔄 Эргүүлэлт</button>
+        <button class="btn" data-mx="f" style="text-align:left">🦋 Тэнхлэгийн тэгш хэм</button>
+        <div class="fb" id="mFb" style="min-height:56px"></div>
+        <div class="row"><button class="btn sm" id="mShow">👁 Үзүүлэх</button><button class="btn or sm" id="mNew">🎲 Дараагийн</button><button class="btn sm" id="mHint">💡</button><span class="chip">Зөв: <b id="mScore">0</b> / 5</span></div>
+        <div class="def" id="mHintBox" style="display:none">Ижил тийш харж байна → <b>зөөлт</b>. Эргэсэн → <b>эргүүлэлт</b>. Толин тусгал шиг урвасан → <b>тэгш хэм</b>.</div>
+        <div class="def g" style="margin-top:auto">📗 х.109: Гурван шилжилт бүгд дүрсийг <b>тэнцүү дүрс</b>эд шилжүүлнэ — хэлбэр, хэмжээ өөрчлөгдөхгүй!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Debug corner -->
+<section class="slide" data-name="🐞 Алдаа засах булан" data-min="4"
+  data-notes="Программистууд программын алдааг «bug» (хорхой) гэдэг. Бид алдаа хайгч болно!|Эхлээд алдаатай программыг ▶ ажиллуулж, дүрс хаана очсоныг ярилцана. Дараа нь блок дээр дарж засаад дахин ▶.|1-р алдаа (х.107 дасгал): ↑1 биш ↓1. 2-р алдаа: →3 →2 = →5 зөв, ↓2 биш ↓3. 3-р алдаа (х.109): ↻ биш ↺ — цагийн зүүний эсрэг.|Асуулт: →3 →2 гэсэн 2 блокийг 1 блокоор яаж бичих вэ? (→5)|3 алдааг бүгдийг засвал 🐞 LED асна.">
+  <div class="inner">
+    <h2>🐞 Алдаа засах булан</h2>
+    <div class="tabs" id="dTabs"></div>
+    <div class="lab">
+      <div class="card"><svg class="stage" id="dSvg"></svg></div>
+      <div class="card" style="display:flex;flex-direction:column">
+        <h3>🎯 Зорилго</h3>
+        <div id="dMis" style="font-size:18px;min-height:52px"></div>
+        <b>Алдаатай программ:</b>
+        <div class="prog" id="dProg"></div>
+        <div id="dEd" style="min-height:50px"></div>
+        <div class="row" style="margin-top:6px"><button class="btn go" id="dRun">▶ Ажиллуул</button><button class="btn sm" id="dReset">⟲ Анхны программ</button></div>
+        <div class="fb" id="dFb"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Boss: ornament -->
+<section class="slide" data-name="8-р түвшин · БОСС: Монгол хээ бүтээх" data-min="5"
+  data-notes="Монгол хээ (алхан хээ, өлзий гэх мэт) нэг жижиг хэсгийг давтаж — зөөж, эргүүлж — бүтдэг.|Хүүхдүүд 4×4 торон дээр нүд дарж өөрсдийн хээг зурна, эсвэл бэлэн хээ сонгоно.|⭐ горим: хээг зөвхөн параллел зөөлтөөр давтана (→4, →8 … ↓4).|⭐⭐⭐ горим: хээг төвийг тойруулан ↻90° 3 удаа эргүүлж 4 хэсэгтэй «сарнай» бүтээнэ, дараа нь →8, →16 параллел зөөнө. Энэ горимыг ажиллуулбал 8-р LED асна.|2–3 хүүхдийг самбарт гаргаж: Ямар шилжилт хэрэглэсэн бэ? гэж программаа тайлбарлуулна.|Асуулт: Хээ бүтэн 360° эргэхэд хэдэн удаа 90° эргэх вэ? (4)">
+  <div class="inner">
+    <h2>👑 БОСС: Монгол хээ бүтээгч <span class="lv">8-р түвшин</span></h2>
+    <div class="lab" style="grid-template-columns:minmax(260px,.7fr) minmax(0,1.6fr)">
+      <div class="card" style="display:flex;flex-direction:column;gap:6px">
+        <h3>1. Хээгээ зур (4×4)</h3>
+        <svg class="mot" id="pMot" viewBox="0 0 160 160"></svg>
+        <div class="row" style="justify-content:center"><button class="btn sm" id="pP1">Алхан</button><button class="btn sm" id="pP2">Цэцэг</button><button class="btn sm" id="pClr">✕</button></div>
+        <h3 style="margin-top:4px">2. Горим сонго</h3>
+        <button class="btn" id="pModeT">⭐ Зөвхөн зөөлт</button>
+        <button class="btn" id="pModeR">⭐⭐⭐ Эргүүлэлт + зөөлт</button>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column">
+        <svg class="stage" id="pSvg" viewBox="0 0 740 260" style="max-height:calc(100vh - 380px)"></svg>
+        <div class="row" style="margin-top:8px;justify-content:space-between"><b>🤖 Роботын программ:</b><span class="chip">Хээний тоо: <b id="pCnt">0</b></span></div>
+        <div class="log" id="pLog">Горим сонгоод робот хээ бүтээхийг хараарай.</div>
+        <div class="fb" id="pFb"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Exit + homework -->
+<section class="slide" data-name="Гарах шалгалт · Гэрийн даалгавар" data-min="3"
+  data-notes="Гарах шалгалт: 1 — хэлбэр, хэмжээ ижил (тэнцүү дүрс). 2 — анхны байрлалдаа (4 × 90° = 360°). 3 — төв + өнцөг + чиглэл. 4 ⭐⭐⭐ — →3 ↑2 (→5 ←2 = →3; ↑3 ↓1 = ↑2).|Хүүхдүүд гараа өргөж хариулна, нэг хүүхэд дэлгэц дээр дарна.|Гэрийн даалгавар: х.109 — квадратын аль нэг оройг тойруулан цагийн зүүний эсрэг 90° эргүүлж зурах; х.109 — дарцгийг M цэгийг тойруулан эргүүлж будах; х.107 — гурвалжныг 5.3 см зайд зөөж зурах.|Өөрийн үнэлгээ: 🤖 тоогоор хэр сайн ойлгосноо дарна.">
+  <div class="inner">
+    <h2>🏁 Гарах шалгалт ба гэрийн даалгавар</h2>
+    <div class="grid2" style="flex:1;min-height:0">
+      <div id="exQ"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="card">
+          <h3>📚 Гэрийн даалгавар</h3>
+          <ol class="hw" style="margin:0;padding-left:22px;font-size:18px">
+            <li><b>х.109:</b> Квадрат зураад, аль нэг оройг нь тойруулан цагийн зүүний <b>эсрэг</b> 90°-аар эргүүлж зур.</li>
+            <li><b>х.109:</b> Дарцгийг M цэгийг тойруулан цагийн зүүний эсрэг 90° эргүүлж зураад буд.</li>
+            <li><b>х.107:</b> Гурвалжныг шулууны дагуу 5.3 см зайд зөөж зур.</li>
+            <li>⭐⭐⭐ Дэвтэртээ 4×4 хээ зохиож, эргүүлэлт ба зөөлтөөр 4 удаа давтаж, программаа бич.</li>
+          </ol>
+        </div>
+        <div class="card" style="text-align:center">
+          <h3>Өнөөдөр би хэр сайн робот программист байв?</h3>
+          <div class="stars3" id="stars3"><button>🤖</button><button>🤖</button><button>🤖</button></div>
+          <div style="font-family:var(--hf);font-size:22px;color:var(--or);margin-top:6px">Баярлалаа, бяцхан программистууд! 🚀</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav">
+  <button class="btn" id="prevBtn">◀ Өмнөх</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn" id="nextBtn">Дараах ▶</button>
+</nav>
+<div class="tnotes" id="tnotes"><h4>📝 Багшид зориулсан зөвлөмж</h4><ul id="tnList"></ul></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------- Helpers ---------- */
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+const anim=(dur,fn)=>new Promise(res=>{const st=performance.now();(function f(now){const k=Math.min(1,Math.max(0,(now-st)/dur));fn(ease(k));if(k<1)requestAnimationFrame(f);else res()})(st)});
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const DV={R:[1,0],L:[-1,0],U:[0,-1],D:[0,1]},ARW={R:'→',L:'←',U:'↑',D:'↓'};
+const WORD={R:'Баруун тийш',L:'Зүүн тийш',U:'Урагш',D:'Хойш'};
+const WORD2={R:'баруун',L:'зүүн',U:'дээш',D:'доош'};
+
+/* ---------- LEDs ---------- */
+function mark(k){const l=$('led'+k);if(l&&!l.classList.contains('on')){l.classList.add('on');confetti(70)}}
+
+/* ---------- Pixel robot ---------- */
+const ROB=["...oo...","...cc...",".cccccc.",".cwccwc.",".cccccc.",".cdoodc.","..cccc..","oc.cc.co"];
+const RC={c:'#22e5ff',w:'#ffffff',o:'#ff9a2e',d:'#0b2547'};
+function robot(parent,x,y,s){const g=el('g',{},parent),p=s/8;ROB.forEach((r,j)=>[...r].forEach((ch,i)=>{if(ch!=='.')el('rect',{x:x-s/2+i*p,y:y-s/2+j*p,width:p+.3,height:p+.3,fill:RC[ch]},g)}));return g}
+
+/* ---------- Grid stage ---------- */
+const U=40,MG=20;
+function Stage(svg,cols,rows){const W=cols*U+2*MG,H=rows*U+2*MG;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML='';
+  const P=(x,y)=>[MG+x*U,MG+y*U];const bg=el('g',{},svg);
+  el('rect',{x:0,y:0,width:W,height:H,rx:10,fill:'#081a33'},bg);
+  for(let i=0;i<=cols;i++)el('line',{x1:MG+i*U,y1:MG,x2:MG+i*U,y2:MG+rows*U,stroke:'rgba(34,229,255,.14)'},bg);
+  for(let j=0;j<=rows;j++)el('line',{x1:MG,y1:MG+j*U,x2:MG+cols*U,y2:MG+j*U,stroke:'rgba(34,229,255,.14)'},bg);
+  for(let i=0;i<=cols;i++)for(let j=0;j<=rows;j++)el('circle',{cx:MG+i*U,cy:MG+j*U,r:2.2,fill:'rgba(34,229,255,.4)'},bg);
+  return{svg,cols,rows,W,H,P,bg,target:el('g',{},svg),ghost:el('g',{},svg),shape:el('g',{},svg),top:el('g',{},svg)}}
+const STY={shape:{fill:'rgba(34,229,255,.38)',stroke:'#22e5ff',lw:3},target:{fill:'rgba(255,154,46,.08)',stroke:'#ff9a2e',lw:3,dash:'9 6'},
+  ghost:{fill:'none',stroke:'rgba(34,229,255,.4)',lw:2,dash:'4 5'},after:{fill:'rgba(255,154,46,.45)',stroke:'#ff9a2e',lw:3},win:{fill:'rgba(61,255,138,.4)',stroke:'#3dff8a',lw:3}};
+function drawParts(st,g,parts,s,clear=true){if(clear)g.innerHTML='';parts.forEach(pt=>{
+  if(pt.length===2){const [a,b]=pt.map(q=>st.P(q[0],q[1]));el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:s.stroke,'stroke-width':s.lw+3,'stroke-linecap':'round','stroke-dasharray':s.dash||''},g)}
+  else el('polygon',{points:pt.map(q=>st.P(q[0],q[1]).join(',')).join(' '),fill:s.fill,stroke:s.stroke,'stroke-width':s.lw,'stroke-linejoin':'round','stroke-dasharray':s.dash||''},g)})}
+function pin(st,g,x,y,label,col='#ff9a2e'){const [px,py]=st.P(x,y);el('circle',{cx:px,cy:py,r:10,fill:'#081a33',stroke:col,'stroke-width':3},g);el('circle',{cx:px,cy:py,r:4,fill:col},g);
+  if(label)el('text',{x:px+13,y:py-10,fill:col,'font-size':20,'font-weight':800,'font-family':'Exo 2'},g,label)}
+const R6=v=>Math.round(v*1e6)/1e6;
+const movePts=(parts,dx,dy)=>parts.map(p=>p.map(([x,y])=>[x+dx,y+dy]));
+function rotPts(parts,cx,cy,deg){const t=deg*Math.PI/180,c=Math.round(Math.cos(t)),s=Math.round(Math.sin(t));return parts.map(p=>p.map(([x,y])=>{const dx=x-cx,dy=y-cy;return[R6(cx+dx*c-dy*s),R6(cy+dx*s+dy*c)]}))}
+const flipPts=(parts,ax)=>parts.map(p=>p.map(([x,y])=>[R6(2*ax-x),y]));
+const key=parts=>parts.map(p=>p.map(q=>q.join(':')).sort().join('|')).sort().join('#');
+function bbox(parts){const xs=[],ys=[];parts.forEach(p=>p.forEach(([x,y])=>{xs.push(x);ys.push(y)}));return{x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}}
+const rotWord=d=>(d>0?'цагийн зүүний дагуу ':'цагийн зүүний эсрэг ')+Math.abs(d)+'°';
+
+/* ---------- Slides ---------- */
+const slides=[...document.querySelectorAll('.slide')];const dots=$('dots');let cur=0;
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.textContent=String(i+1).padStart(2,'0');b.title=s.dataset.name;b.onclick=()=>go(i);dots.appendChild(b)});
+function go(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===cur));
+  [...dots.children].forEach((d,j)=>{d.classList.toggle('on',j===cur);d.classList.toggle('done',j<cur)});
+  const s=slides[cur];
+  $('stageName').textContent=s.dataset.name;$('sheetNo').textContent='Слайд '+(cur+1)+'/'+slides.length;
+  $('tnList').innerHTML='<li>⏱ Зөвлөмж хугацаа: ≈'+s.dataset.min+' мин</li>'+s.dataset.notes.split('|').map(t=>'<li>'+t+'</li>').join('');
+  $('prevBtn').disabled=cur===0;$('nextBtn').textContent=cur===slides.length-1?'🏁 Төгсгөл':'Дараах ▶';
+}
+$('prevBtn').onclick=()=>go(cur-1);$('nextBtn').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(t&&(t.isContentEditable||t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return;
+  if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);
+  else if(e.key==='f'||e.key==='F')toggleFS();
+  else if(e.key==='n'||e.key==='N')toggleNotes();
+});
+function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}
+function toggleNotes(){$('tnotes').classList.toggle('show')}
+$('fsBtn').onclick=toggleFS;$('notesBtn').onclick=toggleNotes;
+
+/* ---------- Timer ---------- */
+let remain=40*60,running=false,tick=null;
+function drawT(){const a=Math.abs(remain),m=Math.floor(a/60),s=a%60;$('tval').textContent=(remain<0?'+':'')+m+':'+String(s).padStart(2,'0');$('timer').className='timer'+(remain<0?' over':remain<=300?' warn':'')}
+$('tPlay').onclick=()=>{running=!running;$('tPlay').textContent=running?'⏸':'▶';if(running)tick=setInterval(()=>{remain--;drawT()},1000);else clearInterval(tick)};
+$('timer').ondblclick=()=>{remain=40*60;drawT()};drawT();
+
+/* ---------- Circuit background ---------- */
+(()=>{const s=$('circ'),W=innerWidth,H=innerHeight;s.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  for(let i=0;i<30;i++){let x=Math.round(rnd(0,W)/32)*32,y=Math.round(rnd(0,H)/32)*32;const pts=[[x,y]];
+    for(let k=0;k<3;k++){const m=ri(1,4)*32;if(k%2===0)x+=m*(Math.random()<.5?-1:1);else{const d=Math.random()<.5?-1:1;x+=m*d;y+=m*(Math.random()<.5?-1:1)}pts.push([x,y])}
+    const col=i%4===0?'rgba(255,154,46,.35)':'rgba(34,229,255,.28)';
+    el('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:col,'stroke-width':2},s);
+    el('circle',{cx:pts[0][0],cy:pts[0][1],r:4,fill:'none',stroke:col,'stroke-width':2},s);el('circle',{cx:x,cy:y,r:3.5,fill:col},s)}})();
+
+/* ---------- Intro robot ---------- */
+(()=>{const s=$('introBot');el('ellipse',{cx:80,cy:178,rx:60,ry:8,fill:'rgba(34,229,255,.25)'},s);robot(s,80,90,150);
+  el('circle',{cx:80,cy:10,r:6,fill:'#ff9a2e'},s).innerHTML='<animate attributeName="opacity" values="1;.2;1" dur="1.2s" repeatCount="indefinite"/>'})();
+
+/* ================= Level 0: robot dance ================= */
+const L0={n:2,st:{x:3,y:2,dir:0},cmds:null,busy:false,cnt:0};const FU=70;
+const fl=$('floor');fl.setAttribute('viewBox',`0 0 ${7*FU+20} ${5*FU+20}`);
+el('rect',{x:0,y:0,width:7*FU+20,height:5*FU+20,rx:10,fill:'#081a33'},fl);
+for(let i=0;i<7;i++)for(let j=0;j<5;j++)el('rect',{x:10+i*FU+2,y:10+j*FU+2,width:FU-4,height:FU-4,rx:6,fill:(i+j)%2?'#0d2346':'#0b1f3e',stroke:'rgba(34,229,255,.18)'},fl);
+el('text',{x:10+3.5*FU,y:8,'text-anchor':'middle','font-size':0},fl);
+el('rect',{x:10+2*FU,y:2,width:3*FU,height:6,rx:3,fill:'#ff9a2e'},fl);
+const rbG=el('g',{},fl);el('polygon',{points:'0,-34 -9,-24 9,-24',fill:'#ff9a2e'},rbG);robot(rbG,0,4,46);
+const fcx=x=>10+x*FU+FU/2;
+function l0Draw(x,y,d){rbG.setAttribute('transform',`translate(${fcx(x)},${fcx(y)}) rotate(${d})`)}
+l0Draw(3,2,0);
+const cmdLbl=c=>c.t==='m'?ARW[c.d]+c.n:(c.a>0?'↻':'↺')+Math.abs(c.a)+'°';
+const cmdSay=c=>c.t==='m'?WORD[c.d]+' '+c.n+' алх':(c.a===180?'Хагас эргэ (180°)':(c.a>0?'Цагийн зүүний дагуу 90° эргэ':'Цагийн зүүний эсрэг 90° эргэ'));
+function l0Gen(){for(let t=0;t<200;t++){const s={...L0.st},cmds=[];let ok=true;
+  for(let i=0;i<L0.n;i++){let c;if(Math.random()<.55){const d='RLUD'[ri(0,3)];c={t:'m',d,n:ri(1,3)};s.x+=DV[d][0]*c.n;s.y+=DV[d][1]*c.n;if(s.x<0||s.x>6||s.y<0||s.y>4){ok=false;break}}else c={t:'r',a:[90,-90,180][ri(0,2)]};cmds.push(c)}
+  if(ok&&(L0.n<2||cmds.some(c=>c.t==='m'))){L0.cmds=cmds;break}}
+  $('l0Card').textContent=L0.cmds.map(cmdLbl).join('  ');$('l0Say').textContent=L0.cmds.map(cmdSay).join(' → ')}
+$('l0New').onclick=()=>{if(!L0.busy)l0Gen()};
+document.querySelectorAll('[data-l0]').forEach(b=>b.onclick=()=>{L0.n=+b.dataset.l0;document.querySelectorAll('[data-l0]').forEach(x=>x.classList.toggle('on',x===b));l0Gen()});
+$('l0Run').onclick=async()=>{if(L0.busy)return;if(!L0.cmds){l0Gen();return}L0.busy=true;const s=L0.st;
+  for(const c of L0.cmds){if(c.t==='m'){const x0=s.x,y0=s.y,[dx,dy]=DV[c.d];await anim(380*c.n,k=>l0Draw(x0+dx*c.n*k,y0+dy*c.n*k,s.dir));s.x+=dx*c.n;s.y+=dy*c.n}
+    else{const d0=s.dir;await anim(600,k=>l0Draw(s.x,s.y,d0+c.a*k));s.dir+=c.a}await wait(150)}
+  L0.cmds=null;L0.busy=false;L0.cnt++;$('l0Cnt').textContent=L0.cnt;$('l0Say').textContent='✅ Зөв хийсэн үү? Шинэ команд → 🎲';if(L0.cnt>=3)mark(0)};
+$('l0Reset').onclick=()=>{if(L0.busy)return;L0.st={x:3,y:2,dir:0};l0Draw(3,2,0)};
+
+/* ================= Levels 1-3: translation ================= */
+const TL=[
+  {nm:'1-р түвшин ⭐',start:[[[1,7],[4,7],[1,4]]],off:[5,0],max:9,txt:'Гурвалжныг улбар шар тасархай хүрээнд хүргэ. Хэдэн нэгж, аль чиглэлд?'},
+  {nm:'2-р түвшин',start:[[[1,4],[1,2],[2,1],[3,2],[3,4]]],off:[4,1],max:9,txt:'Сурах бичиг х.107: Дүрсийг баруун тийш 4 нэгж, доош 1 нэгж зайд параллелээр зөө.'},
+  {nm:'3-р түвшин ⭐⭐⭐',start:[[[8,5],[10,5],[10,4],[12,6],[10,8],[10,7],[8,7]]],off:[-6,-3],max:2,txt:'🔋 Батерей бага! Зөвхөн <b>2 блок</b> ашиглаж сумыг хүрээнд хүргэ.'}];
+const T={lv:0,prog:[],busy:false,st:null,done:new Set()};
+$('tTabs').innerHTML=TL.map((l,i)=>`<button class="btn" data-tl="${i}">${l.nm}</button>`).join('');
+document.querySelectorAll('[data-tl]').forEach(b=>b.onclick=()=>{if(!T.busy)tSetup(+b.dataset.tl)});
+function tShape(parts){const st=T.st;drawParts(st,st.shape,parts,STY.shape);const [x,y]=parts[0][0];robot(st.shape,...st.P(x,y),30)}
+function tSetup(lv){T.lv=lv;T.prog=[];const L=TL[lv];const st=Stage($('tSvg'),13,9);T.st=st;
+  drawParts(st,st.target,movePts(L.start,...L.off),STY.target);drawParts(st,st.ghost,L.start,STY.ghost);tShape(L.start);
+  document.querySelectorAll('[data-tl]').forEach((b,i)=>b.classList.toggle('on',i===lv));$('tMis').innerHTML=L.txt;$('tFb').textContent='';tProg()}
+function tProg(){const L=TL[T.lv];$('tProg').innerHTML=T.prog.length?T.prog.map((b,i)=>`<button class="blk" data-ti="${i}">${ARW[b.d]} ${b.n}</button>`).join(''):'<span class="ph">Сум дарж блок нэмээрэй…</span>';
+  $('tBat').innerHTML=L.max<9?`🔋 Блок: ${T.prog.length} / ${L.max}`:`Блок: ${T.prog.length}`;
+  $('tProg').querySelectorAll('[data-ti]').forEach(b=>b.onclick=()=>{if(T.busy)return;T.prog.splice(+b.dataset.ti,1);tProg()})}
+document.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>{if(T.busy)return;const d=b.dataset.td,last=T.prog[T.prog.length-1],L=TL[T.lv];
+  if(last&&last.d===d){if(last.n<12)last.n++}else{if(T.prog.length>=L.max){$('tFb').className='fb no';$('tFb').textContent='🔋 Батерей хүрэлцэхгүй! Ижил сумыг дахин дарж тоог нь өсгө.';return}T.prog.push({d,n:1})}$('tFb').textContent='';tProg()});
+$('tClr').onclick=()=>{if(T.busy)return;T.prog=[];tProg();tShape(TL[T.lv].start);T.st.shape.removeAttribute('transform');$('tFb').textContent=''};
+$('tRun').onclick=async()=>{if(T.busy)return;const L=TL[T.lv],st=T.st,f=$('tFb');if(!T.prog.length){f.className='fb no';f.textContent='👆 Эхлээд блок нэмээрэй.';return}
+  T.busy=true;let parts=L.start;tShape(parts);let ox=0,oy=0;const blks=$('tProg').querySelectorAll('.blk');f.className='fb';f.textContent='🤖 Ажиллаж байна…';
+  for(let i=0;i<T.prog.length;i++){const b=T.prog[i],[dx,dy]=DV[b.d];blks.forEach((x,j)=>x.classList.toggle('run',j===i));
+    await anim(260*b.n+150,k=>st.shape.setAttribute('transform',`translate(${dx*b.n*U*k},${dy*b.n*U*k})`));
+    st.shape.removeAttribute('transform');parts=movePts(parts,dx*b.n,dy*b.n);ox+=dx*b.n;oy+=dy*b.n;tShape(parts);await wait(120)}
+  blks.forEach(x=>x.classList.remove('run'));T.busy=false;
+  if(ox===L.off[0]&&oy===L.off[1]){drawParts(st,st.shape,parts,STY.win);const [x,y]=parts[0][0];robot(st.shape,...st.P(x,y),30);
+    f.className='fb ok';f.innerHTML=`🎉 Зорилгодоо хүрлээ! Нийт: ${sumTxt(ox,oy)}.<br>📏 Хэлбэр, хэмжээ өөрчлөгдөөгүй — <b>тэнцүү дүрс</b>!`;
+    if(!T.done.has(T.lv)){T.done.add(T.lv);mark(T.lv+1)}else confetti(30)}
+  else{f.className='fb no';f.textContent=`🤔 Дахиад хэрэгтэй: ${sumTxt(L.off[0]-ox,L.off[1]-oy)}. Программаа засаарай.`}};
+function sumTxt(x,y){const a=[];if(x)a.push((x>0?'→':'←')+Math.abs(x));if(y)a.push((y>0?'↓':'↑')+Math.abs(y));return a.join(' ')||'0'}
+tSetup(0);
+
+/* ================= Rotation explore: fan + AB ================= */
+const fan=$('fan');let fanDeg=0,fanBusy=false;
+el('rect',{x:0,y:0,width:300,height:300,rx:12,fill:'#081a33'},fan);
+el('polygon',{points:'142,150 158,150 172,292 128,292',fill:'#1b3f72',stroke:'#22e5ff','stroke-width':2},fan);
+const fanG=el('g',{},fan);
+[0,90,180,270].forEach((a,i)=>{const g=el('g',{transform:`rotate(${a} 150 150)`},fanG);el('path',{d:'M150 150 L138 60 Q150 22 166 58 Z',fill:i===0?'#ff9a2e':'rgba(34,229,255,.55)',stroke:i===0?'#ffd2a1':'#22e5ff','stroke-width':2},g)});
+el('circle',{cx:150,cy:150,r:12,fill:'#081a33',stroke:'#3dff8a','stroke-width':3},fan);el('circle',{cx:150,cy:150,r:4,fill:'#3dff8a'},fan);
+el('text',{x:172,y:146,fill:'#3dff8a','font-size':14,'font-weight':700,'font-family':'Exo 2'},fan,'төв');
+const fanMark=el('line',{x1:150,y1:150,x2:150,y2:40,stroke:'rgba(255,154,46,.5)','stroke-width':2,'stroke-dasharray':'5 5'},fan);
+async function fanTurn(d){if(fanBusy)return;fanBusy=true;const a0=fanDeg;await anim(700,k=>fanG.setAttribute('transform',`rotate(${a0+d*k} 150 150)`));fanDeg+=d;fanBusy=false;
+  const tot=fanDeg,f=$('fanFb');$('fanDeg').textContent=(tot<0?'↺ ':tot>0?'↻ ':'')+Math.abs(tot)+'°';const r=Math.abs(tot)%360;
+  if(tot!==0&&r===0){f.className='fb ok';f.textContent=`🎉 ${Math.abs(tot)}° = ${Math.abs(tot)/90} тэгш өнцөг → анхны байрлалдаа ирлээ!`;confetti(40)}
+  else{f.className='fb';f.textContent=r===90?'1 тэгш өнцөг (90°)':r===180?'2 тэгш өнцөг (180°)':r===270?'3 тэгш өнцөг (270°)':''}}
+$('fanCW').onclick=()=>fanTurn(90);$('fanCCW').onclick=()=>fanTurn(-90);
+const AB={st:Stage($('abSvg'),11,8),busy:false};const abA=[4,4],abB=[7,4];
+function abBase(){const st=AB.st;st.target.innerHTML='';st.shape.innerHTML='';st.top.innerHTML='';st.shape.removeAttribute('transform');
+  drawParts(st,st.shape,[[abA,abB]],STY.shape);pin(st,st.top,...abA,'A','#22e5ff');pin(st,st.top,...abB,'B','#22e5ff');$('abFb').textContent=''}
+async function abRot(c,other,lbl){if(AB.busy)return;AB.busy=true;abBase();const st=AB.st,[px,py]=st.P(...c);
+  drawParts(st,st.ghost,[[abA,abB]],STY.ghost);await anim(900,k=>st.shape.setAttribute('transform',`rotate(${90*k} ${px} ${py})`));
+  st.shape.removeAttribute('transform');const np=rotPts([[abA,abB]],c[0],c[1],90);drawParts(st,st.shape,np,STY.after);
+  const q=np[0].find(p=>!(p[0]===c[0]&&p[1]===c[1]));pin(st,st.top,...q,lbl,'#ff9a2e');
+  $('abFb').className='fb ok';$('abFb').innerHTML=`АВ хэрчим → <b>${other}</b> хэрчимд шилжлээ. Урт нь ижил!`;AB.busy=false}
+$('abA').onclick=()=>abRot(abA,'AD','D');$('abB').onclick=()=>abRot(abB,'CB','C');$('abR').onclick=()=>{if(!AB.busy){AB.st.ghost.innerHTML='';abBase()}};abBase();
+
+/* ================= Levels 4-6: rotation ================= */
+const RL=[
+  {nm:'4-р түвшин ⭐',start:[[[5,1],[8,2],[5,3]],[[5,1],[5,5]]],c:{M:[5,5]},tc:'M',ta:-90,txt:'х.109: Дарцгийг <b>M</b> цэгийг тойруулан эргүүлж, улбар шар хүрээнд оруул. Өнцөг, чиглэлээ сонго.'},
+  {nm:'5-р түвшин',start:[[[3,4],[3,1],[7,4]]],c:{A:[3,4],B:[3,1],C:[7,4]},tc:'A',ta:90,txt:'х.109: Гурвалжны <b>тэгш өнцгийн оройг</b> тойруулан цагийн зүүний дагуу 90°-аар эргүүл. Аль орой вэ?'},
+  {nm:'6-р түвшин ⭐⭐⭐',start:[[[6,1],[7,1],[7,3],[8,3],[8,4],[6,4]]],c:{P:[5,4],Q:[6,4],R:[4,2],S:[8,6]},tc:'P',ta:180,txt:'Төв нь дүрсийн <b>гадна</b> байж болно! Төв, өнцөг, чиглэлийг өөрөө ол.'}];
+const RS={lv:0,c:null,a:null,d:null,busy:false,done:new Set()};
+$('rTabs').innerHTML=RL.map((l,i)=>`<button class="btn" data-rl="${i}">${l.nm}</button>`).join('');
+document.querySelectorAll('[data-rl]').forEach(b=>b.onclick=()=>{if(!RS.busy)rSetup(+b.dataset.rl)});
+function rTarget(L){return rotPts(L.start,...L.c[L.tc],L.ta)}
+function rSetup(lv){RS.lv=lv;const L=RL[lv],st=Stage($('rSvg'),11,9);RS.st=st;const ks=Object.keys(L.c);RS.c=ks.length===1?ks[0]:null;RS.a=null;RS.d=null;
+  drawParts(st,st.target,rTarget(L),STY.target);drawParts(st,st.ghost,L.start,STY.ghost);drawParts(st,st.shape,L.start,STY.shape);
+  document.querySelectorAll('[data-rl]').forEach((b,i)=>b.classList.toggle('on',i===lv));$('rMis').innerHTML=L.txt;$('rFb').textContent='';$('rAng').textContent='0°';
+  $('rCands').innerHTML=ks.map(k=>`<button class="btn sm" data-rc="${k}">${k}</button>`).join('');
+  $('rCands').querySelectorAll('[data-rc]').forEach(b=>b.onclick=()=>{if(!RS.busy){RS.c=b.dataset.rc;rUI()}});rUI()}
+function rUI(){const L=RL[RS.lv],st=RS.st;st.top.innerHTML='';
+  Object.entries(L.c).forEach(([k,p])=>{const g=el('g',{style:'cursor:pointer'},st.top);pin(st,g,...p,k,k===RS.c?'#3dff8a':'#ff9a2e');g.onclick=()=>{if(!RS.busy){RS.c=k;rUI()}}});
+  if(RS.c){const [x,y]=st.P(...L.c[RS.c]);robot(st.top,x-26,y+24,30)}
+  document.querySelectorAll('[data-rc]').forEach(b=>b.classList.toggle('on',b.dataset.rc===RS.c));
+  document.querySelectorAll('[data-ra]').forEach(b=>b.classList.toggle('on',+b.dataset.ra===RS.a));
+  document.querySelectorAll('[data-rd]').forEach(b=>b.classList.toggle('on',+b.dataset.rd===RS.d));
+  const parts=[RS.c?`${RS.c}-г тойруулан`:'📍 ?',RS.d?(RS.d>0?'↻':'↺'):'🔁 ?',RS.a?RS.a+'°':'📐 ?'];
+  $('rProg').innerHTML=`<span class="blk c">${parts.join(' ')}</span>`}
+document.querySelectorAll('[data-ra]').forEach(b=>b.onclick=()=>{if(!RS.busy){RS.a=+b.dataset.ra;rUI()}});
+document.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{if(!RS.busy){RS.d=+b.dataset.rd;rUI()}});
+$('rRun').onclick=async()=>{const L=RL[RS.lv],st=RS.st,f=$('rFb');if(RS.busy)return;
+  if(!RS.c||!RS.a||!RS.d){f.className='fb no';f.textContent='👆 Төв, өнцөг, чиглэл — 3-ууланг нь сонго!';return}
+  RS.busy=true;const deg=RS.a*RS.d,[cx,cy]=L.c[RS.c],[px,py]=st.P(cx,cy);drawParts(st,st.shape,L.start,STY.shape);f.className='fb';f.textContent='🤖 Эргүүлж байна…';
+  await anim(Math.abs(deg)*11,k=>{st.shape.setAttribute('transform',`rotate(${deg*k} ${px} ${py})`);$('rAng').textContent=Math.round(Math.abs(deg)*k)+'°'});
+  st.shape.removeAttribute('transform');const res=rotPts(L.start,cx,cy,deg),tg=rTarget(L);RS.busy=false;
+  if(key(res)===key(tg)){drawParts(st,st.shape,res,STY.win);f.className='fb ok';f.innerHTML=`🎉 Яг таарлаа! ${RS.c} цэгийг тойруулан ${rotWord(deg)}.<br>📏 Хэлбэр, хэмжээ ижил — <b>тэнцүү дүрс</b>.`;
+    if(!RS.done.has(RS.lv)){RS.done.add(RS.lv);mark(RS.lv+4)}else confetti(30)}
+  else{drawParts(st,st.shape,res,STY.shape);const okOther=Object.values(L.c).some(p=>key(rotPts(L.start,p[0],p[1],deg))===key(tg));
+    f.className='fb no';f.textContent=okOther?'🤔 Өнцөг, чиглэл зөв! Харин төвөө дахин сонго.':'🤔 Дүрс өөр тийшээ харж байна. Өнцөг эсвэл чиглэлээ шалга.'}};
+rSetup(0);
+
+/* ================= Level 7: identify ================= */
+const MXS=[[[[0,0],[1,0],[1,2],[2,2],[2,3],[0,3]]],[[[0,0],[3,1],[0,2]],[[0,0],[0,4]]],[[[0,0],[3,0],[3,1],[1,1],[1,3],[0,3]]]];
+const MX={cur:null,score:0,ans:false,busy:false};const mst=Stage($('mSvg'),15,9);
+function norm(p){const b=bbox(p);return movePts(p,-b.x0,-b.y0)}
+function mGen(){for(let t=0;t<500;t++){let base=norm(rotPts(MXS[ri(0,MXS.length-1)],0,0,90*ri(0,3)));const b0=bbox(base);
+    base=movePts(base,ri(1,6-b0.x1),ri(1,8-b0.y1));const type=['t','r','f'][ri(0,2)];let after,info={};
+    if(type==='t'){info={dx:ri(5,9),dy:ri(-3,3)};after=movePts(base,info.dx,info.dy)}
+    else if(type==='r'){info={cx:ri(6,9),cy:ri(2,6),a:[90,-90,180][ri(0,2)]};after=rotPts(base,info.cx,info.cy,info.a)}
+    else{info={ax:ri(6,8)};after=flipPts(base,info.ax)}
+    const A=bbox(base),B=bbox(after);if(B.x0<0||B.y0<0||B.x1>15||B.y1>9)continue;if(A.x0<B.x1&&B.x0<A.x1&&A.y0<B.y1&&B.y0<A.y1)continue;
+    return{base,after,type,info}}return null}
+function mNew(){if(MX.busy)return;MX.cur=mGen();MX.ans=false;drawParts(mst,mst.target,[],STY.target);mst.top.innerHTML='';mst.ghost.innerHTML='';mst.shape.removeAttribute('transform');
+  drawParts(mst,mst.shape,MX.cur.base,STY.shape);drawParts(mst,mst.target,MX.cur.after,STY.after);
+  $('mFb').textContent='';document.querySelectorAll('[data-mx]').forEach(b=>{b.classList.remove('on');b.disabled=false})}
+function mExplain(c){const i=c.info;if(c.type==='t')return`Дүрс эргээгүй, урваагүй — зүгээр л ${sumTxt(i.dx,i.dy)} шилжсэн. <b>Параллел зөөлт</b>.`;
+  if(c.type==='r')return`Дүрс ${rotWord(i.a)} эргэсэн. <b>Эргүүлэлт</b>.`;return'Дүрс толин тусгал шиг урвасан. <b>Тэнхлэгийн тэгш хэм</b>.'}
+document.querySelectorAll('[data-mx]').forEach(b=>b.onclick=()=>{if(MX.ans||MX.busy)return;const c=MX.cur,f=$('mFb');
+  if(b.dataset.mx===c.type){MX.ans=true;b.classList.add('on');f.className='fb ok';f.innerHTML='🎉 Зөв! '+mExplain(c);MX.score++;$('mScore').textContent=MX.score;if(MX.score>=5)mark(7);else confetti(25)}
+  else{b.disabled=true;f.className='fb no';f.textContent='🤔 Үгүй ээ. Дүрс аль тийш харж байгааг ажигла!'}});
+$('mShow').onclick=async()=>{if(MX.busy)return;MX.busy=true;const c=MX.cur,i=c.info;mst.ghost.innerHTML='';mst.top.innerHTML='';drawParts(mst,mst.ghost,c.base,STY.ghost);
+  const g=mst.shape;let fn;
+  if(c.type==='t')fn=k=>g.setAttribute('transform',`translate(${i.dx*U*k},${i.dy*U*k})`);
+  else if(c.type==='r'){const [px,py]=mst.P(i.cx,i.cy);pin(mst,mst.top,i.cx,i.cy,'төв','#3dff8a');fn=k=>g.setAttribute('transform',`rotate(${i.a*k} ${px} ${py})`)}
+  else{const [ax]=mst.P(i.ax,0);el('line',{x1:ax,y1:MG-10,x2:ax,y2:MG+9*U+10,stroke:'#3dff8a','stroke-width':3,'stroke-dasharray':'10 6'},mst.top);fn=k=>g.setAttribute('transform',`translate(${ax} 0) scale(${1-2*k} 1) translate(${-ax} 0)`)}
+  await anim(1300,fn);await wait(700);g.removeAttribute('transform');MX.busy=false;
+  if(!MX.ans){$('mFb').className='fb';$('mFb').innerHTML='👁 '+mExplain(c)}};
+$('mNew').onclick=mNew;$('mHint').onclick=()=>{const h=$('mHintBox');h.style.display=h.style.display==='none'?'block':'none'};
+mNew();
+
+/* ================= Debug corner ================= */
+const BUGS=[
+  {nm:'🐞 1',start:[[[1,1],[4,1],[4,2],[3,2],[3,4],[2,4],[2,2],[1,2]]],good:[{t:'m',d:'R',n:4},{t:'m',d:'D',n:1}],bad:[{t:'m',d:'R',n:4},{t:'m',d:'U',n:1}],txt:'Робот Т дүрсийг <b>баруун тийш 4, доош 1</b> нэгж зөөх ёстой (х.107).'},
+  {nm:'🐞 2',start:[[[1,2],[3,2],[3,1],[5,3],[3,5],[3,4],[1,4]]],good:[{t:'m',d:'R',n:3},{t:'m',d:'R',n:2},{t:'m',d:'D',n:3}],bad:[{t:'m',d:'R',n:3},{t:'m',d:'R',n:2},{t:'m',d:'D',n:2}],txt:'Сумыг <b>баруун тийш 5, доош 3</b> нэгж зөөх ёстой.'},
+  {nm:'🐞 3 ⭐⭐⭐',start:[[[6,2],[9,3],[6,4]],[[6,2],[6,6]]],c:{M:[6,6]},good:[{t:'r',c:'M',a:-90}],bad:[{t:'r',c:'M',a:90}],txt:'х.109: Дарцгийг <b>M</b> цэгийг тойруулан <b>цагийн зүүний эсрэг 90°</b> эргүүлэх ёстой.'}];
+const DB={i:0,prog:[],sel:null,busy:false,st:null,done:new Set()};
+$('dTabs').innerHTML=BUGS.map((b,i)=>`<button class="btn" data-db="${i}">${b.nm}</button>`).join('');
+document.querySelectorAll('[data-db]').forEach(b=>b.onclick=()=>{if(!DB.busy)dSetup(+b.dataset.db)});
+function dExec(B,prog){let p=B.start;prog.forEach(c=>{if(c.t==='m')p=movePts(p,DV[c.d][0]*c.n,DV[c.d][1]*c.n);else p=rotPts(p,...B.c[c.c],c.a)});return p}
+function dSetup(i){DB.i=i;const B=BUGS[i];DB.prog=B.bad.map(c=>({...c}));DB.sel=null;const st=Stage($('dSvg'),13,10);DB.st=st;
+  drawParts(st,st.target,dExec(B,B.good),STY.target);drawParts(st,st.ghost,B.start,STY.ghost);drawParts(st,st.shape,B.start,STY.shape);
+  if(B.c)Object.entries(B.c).forEach(([k,p])=>pin(st,st.top,...p,k));
+  document.querySelectorAll('[data-db]').forEach((b,j)=>b.classList.toggle('on',j===i));$('dMis').innerHTML=B.txt;$('dFb').className='fb';$('dFb').textContent='Эхлээд ▶ дарж алдаатай программыг ажиллуулж үз.';dProg()}
+function dLbl(c){return c.t==='m'?`${ARW[c.d]} ${c.n}`:`${c.c}-г тойруулан ${c.a>0?'↻':'↺'} ${Math.abs(c.a)}°`}
+function dProg(){$('dProg').innerHTML=DB.prog.map((c,i)=>`<button class="blk${c.t==='r'?' c':''}${DB.sel===i?' sel':''}" data-dbi="${i}">${dLbl(c)}</button>`).join('');
+  $('dProg').querySelectorAll('[data-dbi]').forEach(b=>b.onclick=()=>{if(!DB.busy){DB.sel=+b.dataset.dbi;dProg()}});dEd()}
+function dEd(){const e=$('dEd');if(DB.sel===null){e.innerHTML='<span class="muted">👆 Алдаатай гэж бодож буй блок дээрээ дар.</span>';return}const c=DB.prog[DB.sel];
+  if(c.t==='m')e.innerHTML='<div class="row">'+'LURD'.split('').map(d=>`<button class="btn sm${c.d===d?' on':''}" data-ed="d${d}">${ARW[d]}</button>`).join('')+'<span style="width:10px"></span><button class="btn sm" data-ed="n-1">−</button><b style="font-size:22px">'+c.n+'</b><button class="btn sm" data-ed="n1">+</button></div>';
+  else e.innerHTML=`<div class="row"><button class="btn sm${c.a>0?' on':''}" data-ed="r1">↻ дагуу</button><button class="btn sm${c.a<0?' on':''}" data-ed="r-1">↺ эсрэг</button><button class="btn sm${Math.abs(c.a)===90?' on':''}" data-ed="a90">90°</button><button class="btn sm${Math.abs(c.a)===180?' on':''}" data-ed="a180">180°</button></div>`;
+  e.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const v=b.dataset.ed,k=v[0],r=v.slice(1);
+    if(k==='d')c.d=r;else if(k==='n')c.n=Math.max(1,Math.min(9,c.n+(+r)));else if(k==='r')c.a=Math.abs(c.a)*(+r);else if(k==='a')c.a=(+r)*Math.sign(c.a);dProg()})}
+$('dReset').onclick=()=>{if(!DB.busy)dSetup(DB.i)};
+$('dRun').onclick=async()=>{if(DB.busy)return;DB.busy=true;const B=BUGS[DB.i],st=DB.st,f=$('dFb');let p=B.start;drawParts(st,st.shape,p,STY.shape);f.className='fb';f.textContent='🤖 Ажиллаж байна…';
+  const blks=$('dProg').querySelectorAll('.blk');
+  for(let i=0;i<DB.prog.length;i++){const c=DB.prog[i];blks.forEach((x,j)=>x.classList.toggle('run',j===i));
+    if(c.t==='m'){const [dx,dy]=DV[c.d];await anim(260*c.n+150,k=>st.shape.setAttribute('transform',`translate(${dx*c.n*U*k},${dy*c.n*U*k})`));p=movePts(p,dx*c.n,dy*c.n)}
+    else{const [px,py]=st.P(...B.c[c.c]);await anim(Math.abs(c.a)*11,k=>st.shape.setAttribute('transform',`rotate(${c.a*k} ${px} ${py})`));p=rotPts(p,...B.c[c.c],c.a)}
+    st.shape.removeAttribute('transform');drawParts(st,st.shape,p,STY.shape);await wait(120)}
+  blks.forEach(x=>x.classList.remove('run'));DB.busy=false;
+  if(key(p)===key(dExec(B,B.good))){drawParts(st,st.shape,p,STY.win);f.className='fb ok';f.textContent='🎉 Алдааг засчихлаа! Та жинхэнэ программист!';DB.done.add(DB.i);if(DB.done.size===BUGS.length)mark('D');else confetti(40)}
+  else{f.className='fb no';f.textContent='🐞 Дүрс зорилгодоо хүрсэнгүй. Аль блок буруу байна? Дарж засаарай.'}};
+dSetup(0);
+
+/* ================= Boss: ornament ================= */
+const CU=30,PAD=10;let motif=new Set();const PRE={
+  P1:["XXXX","X...","X.XX","X.X."],P2:["X...",".XX.",".XXX","..X."]};
+function setPre(k){motif=new Set();PRE[k].forEach((r,j)=>[...r].forEach((ch,i)=>{if(ch==='X')motif.add(i+','+j)}));motDraw()}
+function motDraw(){const s=$('pMot');s.innerHTML='';el('rect',{x:0,y:0,width:160,height:160,fill:'#081a33'},s);
+  for(let i=0;i<4;i++)for(let j=0;j<4;j++){const on=motif.has(i+','+j);const r=el('rect',{x:i*40+2,y:j*40+2,width:36,height:36,rx:5,fill:on?'#ff9a2e':'#0d2346',stroke:on?'#ffd2a1':'rgba(34,229,255,.3)'},s);r.onclick=()=>{const k=i+','+j;motif.has(k)?motif.delete(k):motif.add(k);motDraw()}}}
+function motG(parent,col){const g=el('g',{},parent);motif.forEach(k=>{const [i,j]=k.split(',').map(Number);el('rect',{x:i*CU+1.5,y:j*CU+1.5,width:CU-3,height:CU-3,rx:3,fill:col},g)});return g}
+let pBusy=false;
+async function pBuild(mode){if(pBusy)return;const f=$('pFb');if(!motif.size){f.className='fb no';f.textContent='👆 Эхлээд 4×4 торон дээр хээгээ зур.';return}
+  pBusy=true;$('pModeT').classList.toggle('on',mode==='t');$('pModeR').classList.toggle('on',mode==='r');
+  const s=$('pSvg');s.innerHTML='';el('rect',{x:0,y:0,width:740,height:260,rx:10,fill:'#081a33'},s);
+  for(let i=0;i<=24;i++)el('line',{x1:PAD+i*CU,y1:PAD,x2:PAD+i*CU,y2:PAD+8*CU,stroke:'rgba(34,229,255,.1)'},s);for(let j=0;j<=8;j++)el('line',{x1:PAD,y1:PAD+j*CU,x2:PAD+24*CU,y2:PAD+j*CU,stroke:'rgba(34,229,255,.1)'},s);
+  const root=el('g',{transform:`translate(${PAD} ${PAD})`},s);const log=[];let cnt=0;const L=$('pLog');const upd=t=>{log.push(t);L.innerHTML=log.join(' · ');L.scrollTop=1e4;$('pCnt').textContent=cnt};
+  f.className='fb';f.textContent='🤖 Бүтээж байна…';
+  if(mode==='t'){for(let j=0;j<2;j++)for(let i=0;i<6;i++){const g=motG(root,(i+j)%2?'#22e5ff':'#ff9a2e');cnt++;
+      if(i===0&&j===0){upd('Хээ ①');await wait(250);continue}
+      await anim(380,k=>g.setAttribute('transform',`translate(${i*4*CU*k} ${j*4*CU*k})`));upd(sumTxt(i*4,j*4))}
+    f.className='fb ok';f.textContent='🎉 12 хээг зөвхөн параллел зөөлтөөр давтлаа! Одоо ⭐⭐⭐ горимыг туршаарай.';confetti(40)}
+  else{const C=4*CU;for(let r=0;r<3;r++){const outer=el('g',{},root);const col=r%2?'#22e5ff':'#ff9a2e';
+      const parts=[0,1,2,3].map(q=>{const g=motG(outer,col);if(r>0)g.setAttribute('transform',`rotate(${90*q} ${C} ${C})`);return g});
+      if(r===0){cnt++;upd('Хээ ①');await wait(250);for(let q=1;q<4;q++){cnt++;await anim(650,k=>parts[q].setAttribute('transform',`rotate(${90*q*k} ${C} ${C})`));upd('↻'+90*q+'°')}}
+      else{cnt+=4;await anim(700,k=>outer.setAttribute('transform',`translate(${r*8*CU*k} 0)`));upd('Сарнай '+sumTxt(r*8,0))}}
+    f.className='fb ok';f.innerHTML='👑 БОСС ялагдлаа! 3 эргүүлэлт + 2 параллел зөөлт = 12 хээ. Бүх хээ <b>тэнцүү</b>!';mark(8)}
+  pBusy=false}
+$('pModeT').onclick=()=>pBuild('t');$('pModeR').onclick=()=>pBuild('r');
+$('pP1').onclick=()=>setPre('P1');$('pP2').onclick=()=>setPre('P2');$('pClr').onclick=()=>{motif=new Set();motDraw()};
+setPre('P1');
+
+/* ================= Exit check ================= */
+const EX=[
+  {q:'1. Дүрсийг →3 ↓2 зөөхөд хэлбэр, хэмжээ нь…',o:['томорно','ижил хэвээр','жижгэрнэ'],a:1},
+  {q:'2. Квадратыг цагийн зүүний дагуу 90°-аар 4 удаа эргүүлбэл…',o:['анхны байрлалдаа ирнэ','урвана','180° эргэнэ'],a:0},
+  {q:'3. Эргүүлэлт хийхэд юу заавал хэрэгтэй вэ?',o:['зөвхөн зай','төв + өнцөг + чиглэл','зөвхөн өнгө'],a:1},
+  {q:'4. ⭐⭐⭐ →5 ←2 ↑3 ↓1 программыг 2 блокоор бич.',o:['→7 ↑4','→3 ↓2','→3 ↑2'],a:2}];
+let exOk=0;
+EX.forEach(x=>{const d=document.createElement('div');d.className='card qcard';d.innerHTML=`<div class="q">${x.q}</div><div class="row">${x.o.map((o,i)=>`<button class="btn" data-i="${i}">${o}</button>`).join('')}</div>`;
+  let done=false;d.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(done)return;if(+b.dataset.i===x.a){done=true;b.classList.add('right');exOk++;confetti(exOk===EX.length?90:25)}else b.classList.add('wrong')});$('exQ').appendChild(d)});
+
+/* ================= Stars ================= */
+(()=>{const b=[...document.querySelectorAll('#stars3 button')];const set=n=>{b.forEach((x,i)=>x.classList.toggle('on',i<n));store.set('m_tr_stars',n)};b.forEach((x,i)=>x.onclick=()=>{set(i+1);if(i===2)confetti(60)});set(+(store.get('m_tr_stars')||0))})();
+
+/* ================= Confetti (pixels + LEDs) ================= */
+const cf=$('confetti'),cfx=cf.getContext('2d');let parts=[],cRun=false;
+function confetti(n){cf.width=innerWidth;cf.height=innerHeight;const cols=['#22e5ff','#ff9a2e','#3dff8a','#ffffff','#0bb8d4'];
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2+rnd(-160,160),y:innerHeight*.45,vx:rnd(-7,7),vy:-rnd(4,18),s:rnd(6,12),c:cols[i%5],sh:i%3,r:0,life:120});
+  if(!cRun){cRun=true;requestAnimationFrame(cStep)}}
+function cStep(){cfx.clearRect(0,0,cf.width,cf.height);parts.forEach(p=>{p.vy+=.4;p.x+=p.vx;p.y+=p.vy;p.r+=.12;p.life--;cfx.save();cfx.translate(p.x,p.y);cfx.fillStyle=p.c;cfx.shadowColor=p.c;cfx.shadowBlur=8;
+    if(p.sh===0){cfx.beginPath();cfx.arc(0,0,p.s/2.4,0,7);cfx.fill()}else if(p.sh===1){cfx.fillRect(-p.s/2,-p.s/2,p.s,p.s)}else{cfx.rotate(p.r);cfx.fillRect(-p.s/2,-p.s/6,p.s,p.s/3);cfx.fillRect(-p.s/6,-p.s/2,p.s/3,p.s)}cfx.restore()});
+  parts=parts.filter(p=>p.life>0&&p.y<cf.height+20);if(parts.length)requestAnimationFrame(cStep);else{cRun=false;cfx.clearRect(0,0,cf.width,cf.height)}}
+
+go(0);
+</script>
+</body>
+</html>
